@@ -14,7 +14,7 @@ node = "/unicorn_test/" + str(randint(0,100500))
 @gen.coroutine
 def create_delete_node(unicorn, data, response):
     node = "/unicorn_test/" + str(randint(0,100500))
-    response.write("Create node " + str(node) + "\n")
+    #response.write("Create node " + str(node) + "\n")
     try:
         chan = yield unicorn.create(node,str(data))
         result_put = yield chan.rx.get()
@@ -27,12 +27,12 @@ def create_delete_node(unicorn, data, response):
         result_put = yield chan.rx.get()
         yield chan.tx.close()
 
-    response.write("Get node " + str(node) + "\n")
+    #response.write("Get node " + str(node) + "\n")
     chan = yield unicorn.get(node)
     result = yield chan.rx.get()
     yield chan.tx.close()
 
-    response.write("Remove node " + str(node) + "\n")
+    #response.write("Remove node " + str(node) + "\n")
     chan = yield unicorn.remove(node,result[1])
     result_remove = yield chan.rx.get()
     yield chan.tx.close()
@@ -47,8 +47,9 @@ def unicorn_tank(request, response):
     data = f.read(size*1024)
 
     response.write(msgpack.packb((200, DEFAULT_HEADERS)))
-    response.write("Create " + str(count) + " nodes with size: " + str(size) + "kb\n")
+    #response.write("Create " + str(count) + " nodes with size: " + str(size) + "kb\n")
 
+    error = 0
     i = 0
     futures = {}
     while i < count:
@@ -59,9 +60,15 @@ def unicorn_tank(request, response):
     while not wait_iterator.done():
         try:
             yield wait_iterator.next()
-            response.write(str(wait_iterator.current_index) + " done\n")
+            #response.write(str(wait_iterator.current_index) + " done\n")
         except:
-            response.write(str(wait_iterator.current_index) + " failed\n")
+            error = error + 1
+            #response.write(str(wait_iterator.current_index) + " failed\n")
+
+    if error == 0:
+        response.write(msgpack.packb((200, DEFAULT_HEADERS)))
+    else:
+        response.write(msgpack.packb((500, DEFAULT_HEADERS)))
 
     response.close()
 
